@@ -1,6 +1,11 @@
 #! /usr/bin/env python3
 
+# Author: Gabriel Tamborski
+# Author: Thomas Gruber
+# Version: 0.9, 11/20/18
+
 import RPi.GPIO as io
+
 
 class MovementManager:
 
@@ -21,6 +26,7 @@ class MovementManager:
         frequency = DEFAULT_FREQUENCY
         is_moving = False
 
+
         def __init__(self, direction_pin, motor_pin):
             self.direction_pin = direction_pin
             self.motor_pin = motor_pin
@@ -36,6 +42,7 @@ class MovementManager:
             # disable movement until start is called
             self.motor.stop()
 
+
         def start(self):
             if not self.is_moving and self.frequency != 0:
                 # set motor direction
@@ -49,13 +56,16 @@ class MovementManager:
 
                 self.is_moving = True
 
+
         def stop(self):
             if self.is_moving:
                 self.motor.stop()
                 self.is_moving = False
 
+
     motors = dict()
     is_moving = False
+
 
     def __init__(self):
         self.motors["left_back"] = Motor(LEFT_BACK_DIRECTION_PIN, LEFT_BACK_MOTOR_PIN)
@@ -63,7 +73,32 @@ class MovementManager:
         self.motors["right_back"] = Motor(RIGHT_BACK_DIRECTION_PIN, RIGHT_BACK_MOTOR_PIN)
         self.motors["right_front"] = Motor(RIGHT_FRONT_DIRECTION_PIN, RIGHT_FRONT_MOTOR_PIN)
 
+
     def forward(self):
+        if not self.is_moving:
+            for key, motor in self.motors.items():
+                if "left" in key:
+                    motor.frequency = -Motor.DEFAULT_FREQUENCY
+                elif "right" in key:
+                    motor.frequency = Motor.DEFAULT_FREQUENCY
+                motor.start()
+
+            self.is_moving = True
+
+
+    def backward(self):
+        if not self.is_moving:
+            for key, motor in self.motors.items():
+                if "left" in key:
+                    motor.frequency = Motor.DEFAULT_FREQUENCY
+                elif "right" in key:
+                    motor.frequency = -Motor.DEFAULT_FREQUENCY
+                motor.start()
+
+            self.is_moving = True
+
+
+    def rotate_right(self):
         if not self.is_moving:
             for motor in self.motors.values():
                 motor.frequency = Motor.DEFAULT_FREQUENCY
@@ -71,7 +106,8 @@ class MovementManager:
 
             self.is_moving = True
 
-    def backward(self):
+
+    def rotate_left(self):
         if not self.is_moving:
             for motor in self.motors.values():
                 motor.frequency = -Motor.DEFAULT_FREQUENCY
@@ -79,27 +115,6 @@ class MovementManager:
 
             self.is_moving = True
 
-    def rotate_right(self):
-        if not self.is_moving:
-            for key, motor in self.motors.items():
-                if "left" in key:
-                    motor.frequency = Motor.DEFAULT_FREQUENCY
-                elif "right" in key:
-                    motor.frequency = -Motor.DEFAULT_FREQUENCY
-                motor.start()
-
-            self.is_moving = True
-
-    def rotate_left(self):
-        if not self.is_moving:
-            for key, motor in self.motors.items():
-                if "left" in key:
-                    motor.frequency = -Motor.DEFAULT_FREQUENCY
-                elif "right" in key:
-                    motor.frequency = Motor.DEFAULT_FREQUENCY
-                motor.start()
-
-            self.is_moving = True
 
     def stop(self):
         if self.is_moving:
