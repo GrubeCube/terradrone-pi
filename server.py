@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 # Author: Thomas Gruber
-# Version: 0.8, 11/06/18
+# Version: 0.81, 11/06/18
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -14,23 +14,31 @@ class ControlHandler (BaseHTTPRequestHandler):
     SERVER_PATH = '/terradrone'
     CHAR_ENCODING = 'utf-8'
 
+    HTTP_PORT = 80
+
+    # HTTP response codes
+    ACCEPTED_RESPONSE                   = 202
+    BAD_REQUEST_RESPONSE                = 400
+    UNAUTHROIZED_RESPONSE               = 401
+    TEAPOT_RESPONSE                     = 418
+
     # commands should correspond to those written in Android application
-    CMD_ERROR                                                   = 0
-    CMD_TEST                                                    = 1
-    CMD_FORWARD_START                                           = 100
-    CMD_FORWARD_STOP                                            = 101
-    CMD_BACKWARD_START                                          = 102
-    CMD_BACKWARD_STOP                                           = 103
-    CMD_ROTATE_RIGHT_START                                      = 104
-    CMD_ROTATE_RIGHT_STOP                                       = 105
-    CMD_ROTATE_LEFT_START                                       = 106
-    CMD_ROTATE_LEFT_STOP                                        = 107
-    CMD_COLLECT                                                 = 200
+    CMD_ERROR                           = 0
+    CMD_TEST                            = 1
+    CMD_FORWARD_START                   = 100
+    CMD_FORWARD_STOP                    = 101
+    CMD_BACKWARD_START                  = 102
+    CMD_BACKWARD_STOP                   = 103
+    CMD_ROTATE_RIGHT_START              = 104
+    CMD_ROTATE_RIGHT_STOP               = 105
+    CMD_ROTATE_LEFT_START               = 106
+    CMD_ROTATE_LEFT_STOP                = 107
+    CMD_COLLECT                         = 200
 
 
     def do_GET(self):
         # deny request
-        self.send_error(418)
+        self.send_error(TEAPOT_RESPONSE)
 
 
     def do_POST(self):
@@ -53,7 +61,7 @@ class ControlHandler (BaseHTTPRequestHandler):
                 content_buffer = io.BytesIO()
                 response_length = content_buffer.write(json_response)
 
-                self.send_response(202)
+                self.send_response(ACCEPTED_RESPONSE)
                 self.send_header('Content-Length', response_length)
                 self.send_header('Content-Type', 'application/json; charset=' + self.CHAR_ENCODING)
                 self.send_header('Connection', 'close')
@@ -63,10 +71,10 @@ class ControlHandler (BaseHTTPRequestHandler):
                 content_buffer.close()
             else:
                 # invalid command type
-                self.send_error(400)
+                self.send_error(BAD_REQUEST_RESPONSE)
         else:
             print(self.path)
-            self.send_error(401)
+            self.send_error(UNAUTHROIZED_RESPONSE)
 
         # default to closing all connections
         self.close_connection = True
@@ -74,7 +82,7 @@ class ControlHandler (BaseHTTPRequestHandler):
 
 def main():
     # must be ran with 'sudo' to run on port 80
-    httpd = HTTPServer(('', 80), ControlHandler)
+    httpd = HTTPServer(('', HTTP_PORT), ControlHandler)
     httpd.serve_forever()
 
 
