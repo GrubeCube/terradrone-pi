@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 # Author: Thomas Gruber
-# Version: 0.91, 11/06/18
+# Version: 0.92, 11/06/18
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from movement import MovementManager
 
 import io
 import json
@@ -59,7 +60,58 @@ class ControlHandler (BaseHTTPRequestHandler):
 
                 self.send_accepted_response(response)
 
+            elif request_type == self.CMD_COLLECT:
+                # send fake response until auger motor is set up
+                response = {
+                    'time': self.get_time(),
+                    'command': self.CMD_COLLECT,
+                    'location': {
+                        'latitude': 39.7596265,
+                        'longitude': -84.1230534
+                    }
+                }
 
+                self.send_accepted_response(response)
+
+            elif request_type == self.CMD_FORWARD_START:
+                if not self.cache.movement_manager.is_moving or not self.cache.is_collecting:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.forward()
+
+            elif request_type == self.CMD_FORWARD_STOP:
+                if self.cache.previous_command == self.CMD_FORWARD_START:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.stop()
+
+            elif request_type == self.CMD_BACKWARD_START:
+                if not self.cache.movement_manager.is_moving or not self.cache.is_collecting:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.backward()
+
+            elif request_type == self.CMD_BACKWARD_STOP:
+                if self.cache.previous_command == self.CMD_BACKWARD_START:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.stop()
+
+            elif request_type == self.CMD_ROTATE_RIGHT_START:
+                if not self.cache.movement_manager.is_moving or not self.cache.is_collecting:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.rotate_right()
+
+            elif request_type == self.CMD_ROTATE_RIGHT_STOP:
+                if self.cache.previous_command == self.CMD_ROTATE_RIGHT_START:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.stop()
+
+            elif request_type == self.CMD_ROTATE_LEFT_START:
+                if not self.cache.movement_manager.is_moving or not self.cache.is_collecting:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.rotate_left()
+
+            elif request_type == self.CMD_ROTATE_LEFT_STOP:
+                if self.cache.previous_command == self.CMD_ROTATE_LEFT_START:
+                    self.cache.previous_command = request_type
+                    self.cache.movement_manager.stop()
 
             else:
                 # invalid command type
@@ -93,6 +145,9 @@ class ControlHandler (BaseHTTPRequestHandler):
 
 
 def main():
+    print('Starting HTTP server on port 80.')
+    print('Awaiting requests...')
+
     # must be ran with 'sudo' to run on port 80
     httpd = HTTPServer(('', HTTP_PORT), ControlHandler)
     httpd.serve_forever()
