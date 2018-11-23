@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 # Author: Thomas Gruber
-# Version: 0.92, 11/06/18
+# Version: 0.93, 11/06/18
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from movement import MovementManager
@@ -13,7 +13,26 @@ import time
 
 HTTP_PORT = 80
 
- 
+
+class Singleton (type):
+    _instances = {}
+
+    def __call__(cls, *args, **kargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kargs)
+        return cls._instances[cls]
+
+
+class ServerCache (metaclass=Singleton):
+
+    INITIAL_CMD = 0
+
+    def __init__(self):
+        self.movement_manager = MovementManager()
+        self.is_collecting = False
+        self.previous_command = self.INITIAL_CMD
+
+
 class ControlHandler (BaseHTTPRequestHandler):
     SERVER_PATH = '/terradrone'
     CHAR_ENCODING = 'utf-8'
@@ -36,6 +55,9 @@ class ControlHandler (BaseHTTPRequestHandler):
     CMD_ROTATE_LEFT_START               = 106
     CMD_ROTATE_LEFT_STOP                = 107
     CMD_COLLECT                         = 200
+
+
+    cache = ServerCache()
 
 
     def do_GET(self):
