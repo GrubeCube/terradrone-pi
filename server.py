@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 # Author: Thomas Gruber
-# Version: 0.81, 11/06/18
+# Version: 0.91, 11/06/18
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -53,23 +53,14 @@ class ControlHandler (BaseHTTPRequestHandler):
         if self.path == self.SERVER_PATH:
             if request_type == self.CMD_TEST:
                 response = {
-                    'time': int(round(time.time() * 1e3)),
+                    'time': self.get_time(),
                     'command': self.CMD_TEST
                 }
 
-                json_response = json.dumps(response).encode(self.CHAR_ENCODING)
+                self.send_accepted_response(response)
 
-                content_buffer = io.BytesIO()
-                response_length = content_buffer.write(json_response)
 
-                self.send_response(ACCEPTED_RESPONSE)
-                self.send_header('Content-Length', response_length)
-                self.send_header('Content-Type', 'application/json; charset=' + self.CHAR_ENCODING)
-                self.send_header('Connection', 'close')
-                self.end_headers()
 
-                self.wfile.write(content_buffer.getvalue())
-                content_buffer.close()
             else:
                 # invalid command type
                 self.send_error(self.BAD_REQUEST_RESPONSE)
@@ -79,6 +70,26 @@ class ControlHandler (BaseHTTPRequestHandler):
 
         # default to closing all connections
         self.close_connection = True
+
+
+    def send_accepted_response(self, response):
+        json_response = json.dumps(response).encode(self.CHAR_ENCODING)
+
+        content_buffer = io.BytesIO()
+        response_length = content_buffer.write(json_response)
+
+        self.send_response(self.ACCEPTED_RESPONSE)
+        self.send_header('Content-Length', response_length)
+        self.send_header('Content-Type', 'application/json; charset=' + self.CHAR_ENCODING)
+        self.send_header('Connection', 'close')
+        self.end_headers()
+
+        self.wfile.write(content_buffer.getvalue())
+        content_buffer.close()
+
+
+    def get_time(self):
+        return int(round(time.time() * 1e3))
 
 
 def main():
