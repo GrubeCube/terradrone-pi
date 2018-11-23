@@ -10,11 +10,12 @@ import json
 import time
 
 
+HTTP_PORT = 80
+
+ 
 class ControlHandler (BaseHTTPRequestHandler):
     SERVER_PATH = '/terradrone'
     CHAR_ENCODING = 'utf-8'
-
-    HTTP_PORT = 80
 
     # HTTP response codes
     ACCEPTED_RESPONSE                   = 202
@@ -38,7 +39,7 @@ class ControlHandler (BaseHTTPRequestHandler):
 
     def do_GET(self):
         # deny request
-        self.send_error(TEAPOT_RESPONSE)
+        self.send_error(self.TEAPOT_RESPONSE)
 
 
     def do_POST(self):
@@ -71,10 +72,10 @@ class ControlHandler (BaseHTTPRequestHandler):
                 content_buffer.close()
             else:
                 # invalid command type
-                self.send_error(BAD_REQUEST_RESPONSE)
+                self.send_error(self.BAD_REQUEST_RESPONSE)
+
         else:
-            print(self.path)
-            self.send_error(UNAUTHROIZED_RESPONSE)
+            self.send_error(self.UNAUTHROIZED_RESPONSE)
 
         # default to closing all connections
         self.close_connection = True
