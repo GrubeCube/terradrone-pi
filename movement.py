@@ -2,66 +2,67 @@
 
 # Author: Gabriel Tamborski
 # Author: Thomas Gruber
-# Version: 0.9, 11/20/18
+# Version: 0.91, 11/20/18
 
 import RPi.GPIO as io
 
 
-class MovementManager:
-
-    LEFT_BACK_DIRECTION_PIN         = 31
-    LEFT_BACK_MOTOR_PIN             = 32
-    LEFT_FRONT_DIRECTION_PIN        = 33
-    LEFT_FRONT_MOTOR_PIN            = 36
-    RIGHT_BACK_DIRECTION_PIN        = 35
-    RIGHT_BACK_MOTOR_PIN            = 38
-    RIGHT_FRONT_DIRECTION_PIN       = 37
-    RIGHT_FRONT_MOTOR_PIN           = 40
-
-    class Motor:
-
-        DEFAULT_FREQUENCY   = 100
-        DEFAULT_DUTY_CYCLE  = 50
-
-        frequency = DEFAULT_FREQUENCY
-        is_moving = False
+LEFT_BACK_DIRECTION_PIN         = 31
+LEFT_BACK_MOTOR_PIN             = 32
+LEFT_FRONT_DIRECTION_PIN        = 33
+LEFT_FRONT_MOTOR_PIN            = 36
+RIGHT_BACK_DIRECTION_PIN        = 35
+RIGHT_BACK_MOTOR_PIN            = 38
+RIGHT_FRONT_DIRECTION_PIN       = 37
+RIGHT_FRONT_MOTOR_PIN           = 40
 
 
-        def __init__(self, direction_pin, motor_pin):
-            self.direction_pin = direction_pin
-            self.motor_pin = motor_pin
+class Motor:
 
-            io.setwarnings(False)
+    DEFAULT_FREQUENCY   = 100
+    DEFAULT_DUTY_CYCLE  = 50
 
-            io.setmode(io.BOARD)
-            io.setup(self.motor_pin, io.OUT)
-            io.setup(self.direction_pin, io.OUT)
+    frequency = DEFAULT_FREQUENCY
+    is_moving = False
 
-            self.motor = io.PWM(self.motor_pin, self.frequency)
 
-            # disable movement until start is called
+    def __init__(self, direction_pin, motor_pin):
+        self.direction_pin = direction_pin
+        self.motor_pin = motor_pin
+
+        io.setwarnings(False)
+
+        io.setmode(io.BOARD)
+        io.setup(self.motor_pin, io.OUT)
+        io.setup(self.direction_pin, io.OUT)
+
+        self.motor = io.PWM(self.motor_pin, self.frequency)
+
+        # disable movement until start is called
+        self.motor.stop()
+
+
+    def start(self):
+        if not self.is_moving and self.frequency != 0:
+            # set motor direction
+            direction = io.HIGH if self.frequency < 0 else io.LOW
+            io.output(self.direction_pin, direction)
+
+            # set frequency (speed)
+            abs_freq = abs(self.frequency)
+            self.motor.ChangeFrequency(abs_freq)
+            self.motor.start(self.DEFAULT_DUTY_CYCLE)
+
+            self.is_moving = True
+
+
+    def stop(self):
+        if self.is_moving:
             self.motor.stop()
+            self.is_moving = False
 
 
-        def start(self):
-            if not self.is_moving and self.frequency != 0:
-                # set motor direction
-                direction = io.HIGH if frequency < 0 else io.LOW
-                io.output(self.direction_pin, direction)
-
-                # set frequency (speed)
-                abs_freq = abs(self.frequency)
-                self.motor.ChangeFrequency(abs_freq)
-                self.motor.start(DEFAULT_DUTY_CYCLE)
-
-                self.is_moving = True
-
-
-        def stop(self):
-            if self.is_moving:
-                self.motor.stop()
-                self.is_moving = False
-
+class MovementManager:
 
     motors = dict()
     is_moving = False
