@@ -5,6 +5,7 @@ led = LED(17)
 dir  = LED(18)
 
 def Go(rps):
+	if rps == 0: return
 	pps = rps * 200
  	t = 1/pps
 	fb = 0 if rps < 0 else 1
